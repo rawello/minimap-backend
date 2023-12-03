@@ -56,17 +56,10 @@ def generate_images(request, build, destinationFrom, destinationTo):
             files = [file for file in os.listdir(folder_path) if "routed.svg" in file]
             floors = []
             if files:
-                if rooms_ll[destinationFrom][0] == rooms_ll[destinationTo][0]:
-                    output_json = {
-                        "build": f'{build}',
-                        "floor": rooms_ll[destinationFrom][0] - 1
-                    }
-                else:
-                    output_json = {
-                        "build": f'{build}',
-                        "from": rooms_ll[destinationFrom][0] - 1,
-                        "to": rooms_ll[destinationTo][0] - 1
-                    }
+                output_json = {
+                    #"build": f'{build}',
+                    "floor": [rooms_ll[destinationFrom][0], rooms_ll[destinationTo][0]]
+                }
                 # создаем жсон и добавляем строки в него
                 for file in files:
                     with open(f'{folder_path}/{file}', 'r') as file1:
@@ -76,20 +69,20 @@ def generate_images(request, build, destinationFrom, destinationTo):
                 # отправляем жсон
                 response = JsonResponse(output_json)
                 print(folder_path)
-                shutil.rmtree(f'{folder_path}')
+                #shutil.rmtree(f'{folder_path}')
                 return response
         else:
             # в любом другом случае плохо
             print(folder_path)
-            shutil.rmtree(f'{folder_path}')
+            #shutil.rmtree(f'{folder_path}')
             return HttpResponse(400)
     except Exception as e:
         print(e, inspect.stack()[0][3])
-        shutil.rmtree(f'{folder_path}')
+       # shutil.rmtree(f'{folder_path}')
         return HttpResponse(400)
-    else:
-        print(folder_path)
-        shutil.rmtree(f'{folder_path}')
+    # else:
+    #     print(folder_path)
+    #     #shutil.rmtree(f'{folder_path}')
 
 
 @csrf_exempt
@@ -97,7 +90,7 @@ def connectWithMobile(request, build):
     # ты даешь нам адрес куда тебе надо мы возвращаем адрес, этажи, комнаты, карты в свг
     try:
         obj = Maps.objects.get(build=build)
-        floors = []
+        # floors = []
         rooms = obj.rooms
         output_json = {
             "build": f'{build}',
@@ -105,9 +98,9 @@ def connectWithMobile(request, build):
         room = []
         for i in rooms:
             room.append(i)
-            floors.append(rooms[i][0])
-        output_json["floors"] = max(floors)
-        output_json["rooms"] = room
+        #     floors.append(rooms[i][0])
+        # output_json["floors"] = max(floors)
+        # output_json["rooms"] = room
         output_json["maps"] = obj.svg
         return JsonResponse(output_json)
     except Exception as e:
@@ -115,11 +108,20 @@ def connectWithMobile(request, build):
         return HttpResponse(400)
 
 
+def getListOfRooms(request, build):
+    obj = Maps.objects.get(build=build)
+    rooms = obj.rooms
+    room = []
+    for i in rooms:
+        room.append(i)
+    return JsonResponse({"rooms": room})
+
+
 def getBuilding(request):
     allMaps = Maps.objects.all()
-    response = {}
-    count = 0
+    response = []
+
     for building in allMaps:
-        response[count] = building.build
-        count += 1
-    return JsonResponse(response)
+        response.append(building.build)
+
+    return JsonResponse({"buildings": response})

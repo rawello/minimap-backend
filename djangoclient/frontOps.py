@@ -8,10 +8,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from djangoclient.models import User, Maps
 
-def allRoutes(request):
+def allMaps(request, loginuser):
     # получаем все роуты созданные пользователем
-    data = json.loads(request.body)
-    loginuser = data['login']
     builds = Maps.objects.all()
     response = []
     output = {}
@@ -22,20 +20,38 @@ def allRoutes(request):
         output[i + 1] = response[i]
     return JsonResponse(output)
 
-def getRoute(request, loginuser, build):
+
+def getObj(request, loginuser, build):
     try:
-        map = Maps.objects.get(build=build, login=loginuser)
-        room = map.rooms
+        obj = Maps.objects.get(build=build, login=loginuser)
         output_json = {
-                 "build": f'{build}',
-                 "rooms": f'{room}',
-                 "svg": f'{map.svg}'
-             }
+            "build": f'{build}',
+            "login": f'{loginuser}',
+            "obj": f'{obj.obj}'
+        }
         return JsonResponse(output_json)
+
     except Exception as e:
         print(e, inspect.stack()[0][3])
         return HttpResponse(400)
 
+
+@csrf_exempt
+def addRouteToDbFromFront(request):
+    data = json.loads(request.body)
+    build = data['build']
+    rooms = data['rooms']
+    loginuser = data['login']
+    svg_maps = data['svg']
+    obj = data['obj']
+    try:
+        currMap = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build, obj=obj)
+    except Exception as e:
+        print(e, inspect.stack()[0][3])
+        return HttpResponse(400)
+    else:
+        currMap.save()
+        return HttpResponse(200)
 
 @csrf_exempt
 def editRoute(request):
@@ -45,16 +61,17 @@ def editRoute(request):
     rooms = data['rooms']
     loginuser = data['login']
     svg_maps = data['svg']
+    obj = data['obj']
     try:
         # ищем, удаляем, создаем
-        currMap = Maps.objects.get(build=old_name)
-        currMap.delete()
-        newMap = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build)
+        currObj = Maps.objects.get(build=old_name, login=loginuser)
+        currObj.delete()
+        newObj = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build, obj=obj)
+        newObj.save()
     except Exception as e:
         print(e, inspect.stack()[0][3])
         return HttpResponse(400)
     else:
-        newMap.save()
         return HttpResponse(200)
 
 def deleteRoute(request):
@@ -71,7 +88,7 @@ def deleteRoute(request):
     else:
         return HttpResponse(200)
 
-def generateQR(request,build, start):
+def generateQR(request, build, start):
     qrcode = segno.make_qr(f"{build}///{start}")
 
     folder_path = f'{random.randint(0, 10000000)}'
@@ -80,27 +97,11 @@ def generateQR(request,build, start):
     img_path = f"{folder_path}/{build}-qr.svg"
     qrcode.save(img_path, scale=10)
 
-    with open(img_path,'r') as file:
+    with open(img_path, 'r') as file:
         svg = file.read()
     shutil.rmtree(f'{folder_path}')
 
     return HttpResponse(svg, content_type='image/svg+xml')
-
-@csrf_exempt
-def addRouteToDbFromFront(request):
-    data = json.loads(request.body)
-    build = data['build']
-    rooms = data['rooms']
-    loginuser = data['login']
-    svg_maps = data['svg']
-    try:
-        currMap = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build)
-    except Exception as e:
-        print(e, inspect.stack()[0][3])
-        return HttpResponse(400)
-    else:
-        currMap.save()
-        return HttpResponse(200)
 
 
 @csrf_exempt

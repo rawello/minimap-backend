@@ -6,13 +6,13 @@ def image_to_svg(img_path):
     img = Image.open(img_path)
     width, height = img.size
 
-    if img.mode == 'P':
+    if img.mode != 'RGB':
         img = img.convert('RGB')
 
     res = "<?xml version = \"1.0\"?>"
+    #res += "<!-- made by Максим Сергеевич, Кирилл, Сеня Арсений Сенечка, Валерия Николаевна, и просто ворон -->"
     res += f"<svg width=\"{width}\" height=\"{height}\" "
     res += "xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">"
-
     for y in range(height):
         for x in range(width):
             color = img.getpixel((x, y))

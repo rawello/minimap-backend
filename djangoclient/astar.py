@@ -96,7 +96,7 @@ def routing(build, floors, destinations, destTo, destFrom, folder_path):
             file = open(f"{folder_path}/{k}-{build}-matrix.txt", "w")  # файл матрицы
             im = Image.open(f"{folder_path}/{k}-{build}.png")  # картинка, которую преобразовываем
 
-            if im.mode == 'P':
+            if im.mode != 'RGB':
                 im = im.convert('RGB')
 
             for i in range(im.size[0]):
@@ -163,6 +163,8 @@ def routing(build, floors, destinations, destTo, destFrom, folder_path):
         if minMatrix(allPathes) is not None:  # если путь найден
             with Image.open(
                     f"{folder_path}/{destinations.get(destFrom)[0]}-{build}.png") as im:  # выбираем на основе какой пикчи будем рисовать
+                if im.mode != 'RGB':
+                    im = im.convert('RGB')
                 draw = ImageDraw.Draw(im)
                 for i in allPathes[minMatrix(allPathes)]:
                     draw.point(i, (128, 128, 128))  # чиркаем маршрут серым по координатам из алгоритма
@@ -178,6 +180,8 @@ def routing(build, floors, destinations, destTo, destFrom, folder_path):
         if path is not None:  # если путь найден
             with Image.open(
                     f"{folder_path}/{destinations.get(destTo)[0]}-{build}.png") as im:  # выбираем на основе какой пикчи будем рисовать
+                if im.mode != 'RGB':
+                    im = im.convert('RGB')
                 draw = ImageDraw.Draw(im)
                 for i in path:
                     draw.point(i, (128, 128, 128))  # чиркаем маршрут серым по координатам из алгоритма
@@ -196,6 +200,8 @@ def routing(build, floors, destinations, destTo, destFrom, folder_path):
         if path is not None:  # если путь найден
             with Image.open(
                     f"{folder_path}/{destinations.get(destTo)[0]}-{build}.png") as im:  # выбираем на основе какой пикчи будем рисовать
+                if im.mode != 'RGB':
+                    im = im.convert('RGB')
                 draw = ImageDraw.Draw(im)
                 for i in path:
                     draw.point(i, (128, 128, 128))  # чиркаем маршрут серым по координатам из алгоритма

@@ -8,5 +8,10 @@ class User(models.Model):
 class Maps(models.Model):
     svg = models.JSONField(null=False)
     rooms = models.JSONField(null=False)
+    obj = models.JSONField(null=False, default="default")
     login = models.CharField(max_length=250, null=False)
     build = models.CharField(max_length=250, null=False, unique=True)
+
+# class FrontObj(models.Model):
+#     login = models.CharField(max_length=250, null=False, default="default")
+#     build = models.CharField(max_length=250, null=False, unique=True, default="default")
