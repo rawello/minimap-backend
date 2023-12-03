@@ -82,11 +82,11 @@ WSGI_APPLICATION = 'djangoProjectFullSvg.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'projectSvg',
-        'USER': 'rawello',
-        'PASSWORD': 'rawello',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'NAME': 'railway',
+        'USER': 'root',
+        'PASSWORD': 'hcH-cf2CC1Ab5f1bEH15C364D2a1e6Bc',
+        'HOST': 'monorail.proxy.rlwy.net',
+        'PORT': '49378',
         'OPTIONS': {
             'init_command': "SET GLOBAL max_connections = 100000"
         }
