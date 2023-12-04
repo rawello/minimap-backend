@@ -96,7 +96,7 @@ def deleteRoute(request):
         return HttpResponse(200)
 
 def generateQR(request, build, start):
-    qrcode = segno.make_qr(f"{build}///{start}")
+    qrcode = segno.make_qr(f"[{build},{start}]")
 
     folder_path = f'{random.randint(0, 10000000)}'
     os.makedirs(folder_path, exist_ok=True)
