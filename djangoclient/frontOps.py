@@ -4,6 +4,8 @@ import json
 import os
 import random
 import segno
+import io
+from PIL import Image
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from djangoclient.models import User, Maps
@@ -24,12 +26,16 @@ def allMaps(request, loginuser):
 def getObj(request, loginuser, build):
     try:
         obj = Maps.objects.get(build=build, login=loginuser)
-        output_json = {
-            "build": f'{build}',
-            "login": f'{loginuser}',
-            "obj": f'{obj.obj}'
-        }
-        return JsonResponse(output_json)
+        # output_json = {
+        #     "build": f'{build}',
+        #     "login": f'{loginuser}',
+        #     "obj": f'{obj.obj}'
+        # }
+        #
+        # for i in obj.obj:
+        #     print(type(i))
+        #     print(i)
+        return JsonResponse({"obj": obj.obj, "floors": obj.floors})
 
     except Exception as e:
         print(e, inspect.stack()[0][3])
@@ -44,8 +50,9 @@ def addRouteToDbFromFront(request):
     loginuser = data['login']
     svg_maps = data['svg']
     obj = data['obj']
+    floors = data['floors']
     try:
-        currMap = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build, obj=obj)
+        currMap = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build, obj=obj, floors=floors)
     except Exception as e:
         print(e, inspect.stack()[0][3])
         return HttpResponse(400)
@@ -56,17 +63,17 @@ def addRouteToDbFromFront(request):
 @csrf_exempt
 def editRoute(request):
     data = json.loads(request.body)
-    old_name = data['build']
-    build = data['build_new']
+    build = data['build']
     rooms = data['rooms']
     loginuser = data['login']
     svg_maps = data['svg']
     obj = data['obj']
+    floors = data['floors']
     try:
         # ищем, удаляем, создаем
-        currObj = Maps.objects.get(build=old_name, login=loginuser)
+        currObj = Maps.objects.get(build=build, login=loginuser)
         currObj.delete()
-        newObj = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build, obj=obj)
+        newObj = Maps(svg=svg_maps, rooms=rooms, login=loginuser, build=build, obj=obj, floors=floors)
         newObj.save()
     except Exception as e:
         print(e, inspect.stack()[0][3])
@@ -94,14 +101,22 @@ def generateQR(request, build, start):
     folder_path = f'{random.randint(0, 10000000)}'
     os.makedirs(folder_path, exist_ok=True)
 
-    img_path = f"{folder_path}/{build}-qr.svg"
-    qrcode.save(img_path, scale=10)
+    img_path = "qr.png"
+    qrcode.save(folder_path+"/qr.png", scale=10)
+    try:
+        with open(folder_path+"/qr.png", "rb") as f:
+            image_data = f.read()
+        buffer = io.BytesIO(image_data)
 
-    with open(img_path, 'r') as file:
-        svg = file.read()
-    shutil.rmtree(f'{folder_path}')
+        shutil.rmtree(f'{folder_path}')
 
-    return HttpResponse(svg, content_type='image/svg+xml')
+        response = HttpResponse(buffer.getvalue(), content_type='image/jpeg')
+        response['Content-Disposition'] = 'attachment; filename=image.jpg'
+
+        return response
+    except Exception as e:
+        print(e)
+        return HttpResponse(200)
 
 
 @csrf_exempt

@@ -69,20 +69,23 @@ def generate_images(request, build, destinationFrom, destinationTo):
                 # отправляем жсон
                 response = JsonResponse(output_json)
                 print(folder_path)
-                #shutil.rmtree(f'{folder_path}')
+                shutil.rmtree(f'{folder_path}')
                 return response
+            else:
+                shutil.rmtree(f'{folder_path}')
+                return HttpResponse(400)
         else:
             # в любом другом случае плохо
             print(folder_path)
-            #shutil.rmtree(f'{folder_path}')
+            shutil.rmtree(f'{folder_path}')
             return HttpResponse(400)
     except Exception as e:
         print(e, inspect.stack()[0][3])
-       # shutil.rmtree(f'{folder_path}')
+        shutil.rmtree(f'{folder_path}')
         return HttpResponse(400)
-    # else:
-    #     print(folder_path)
-    #     #shutil.rmtree(f'{folder_path}')
+    else:
+        print(folder_path)
+        #shutil.rmtree(f'{folder_path}')
 
 
 @csrf_exempt
@@ -98,11 +101,37 @@ def connectWithMobile(request, build):
         room = []
         for i in rooms:
             room.append(i)
-        #     floors.append(rooms[i][0])
-        # output_json["floors"] = max(floors)
-        # output_json["rooms"] = room
-        output_json["maps"] = obj.svg
-        return JsonResponse(output_json)
+
+        while True:
+            folder_path = f'{random.randint(0, 10000000)}'
+            if os.path.isdir(f"{folder_path}"):
+                continue
+            else:
+                os.makedirs(folder_path)
+                break
+        for i in range(len(obj.svg)):
+            with open(f'{folder_path}/{i + 1}-{build}.svg', 'w') as f:
+                f.write(obj.svg[i])
+                convert2png(folder_path, f'{i + 1}-{build}.svg')
+
+        convert2svg(folder_path)
+        files = [file for file in os.listdir(folder_path) if ".svg" in file]
+        floors = []
+        if files:
+            for file in files:
+                with open(f'{folder_path}/{file}', 'r') as file1:
+                    data = file1.read().replace('\n', '').replace('\\', '')
+                floors.append(data)
+
+            output_json["maps"] = floors
+            response = JsonResponse(output_json)
+
+            shutil.rmtree(f'{folder_path}')
+
+            return response
+        else:
+            shutil.rmtree(f'{folder_path}')
+            return HttpResponse(400)
     except Exception as e:
         print(e, inspect.stack()[0][3])
         return HttpResponse(400)
