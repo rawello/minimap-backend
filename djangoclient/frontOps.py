@@ -69,6 +69,7 @@ def editRoute(request):
     svg_maps = data['svg']
     obj = data['obj']
     floors = data['floors']
+    
     try:
         # ищем, удаляем, создаем
         currObj = Maps.objects.get(build=build, login=loginuser)
